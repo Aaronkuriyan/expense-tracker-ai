@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Expense Tracker</title>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
             font-family: Arial;
@@ -47,6 +50,17 @@
             padding: 10px;
             border-radius: 8px;
         }
+
+        canvas {
+            margin-top: 20px;
+        }
+
+        #insight {
+            background: #334155;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -56,7 +70,6 @@
     <h1>💸 Expense Tracker</h1>
 
     <input type="text" id="desc" placeholder="Description">
-
     <input type="number" id="amount" placeholder="Amount">
 
     <select id="category">
@@ -70,8 +83,15 @@
     <button onclick="addExpense()">Add Expense</button>
 
     <h2>Total: ₹<span id="total">0</span></h2>
-    <canvas id="chart" width="300" height="300"></canvas>
+
     <ul id="list"></ul>
+
+    <!-- Chart -->
+    <canvas id="chart" width="300" height="300"></canvas>
+
+    <!-- AI Insight -->
+    <h3>🤖 AI Insight:</h3>
+    <p id="insight">No insights yet</p>
 </div>
 
 <script>
@@ -105,7 +125,9 @@
         document.getElementById("list").appendChild(li);
 
         updateChart();
+        generateInsight();
 
+        // clear inputs
         document.getElementById("desc").value = "";
         document.getElementById("amount").value = "";
     }
@@ -126,6 +148,31 @@
                 }]
             }
         });
+    }
+
+    function generateInsight() {
+        let maxCategory = "";
+        let maxAmount = 0;
+
+        for (let category in categoryData) {
+            if (categoryData[category] > maxAmount) {
+                maxAmount = categoryData[category];
+                maxCategory = category;
+            }
+        }
+
+        let message = "Your spending looks balanced 👍";
+
+        if (maxAmount > 0) {
+            message = `You are spending the most on ${maxCategory}`;
+        }
+
+        // Smart rule
+        if (categoryData["Food"] > total * 0.4) {
+            message = "⚠️ You are overspending on Food!";
+        }
+
+        document.getElementById("insight").innerText = message;
     }
 </script>
 
