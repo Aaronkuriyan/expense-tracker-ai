@@ -1,179 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Expense Tracker</title>
+<meta charset="UTF-8">
+<title>AI Expense Tracker</title>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        body {
-            font-family: Arial;
-            background: #0f172a;
-            color: white;
-            display: flex;
-            justify-content: center;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-        .container {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 50px;
-            width: 350px;
-            text-align: center;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+}
 
-        input, select, button {
-            padding: 10px;
-            margin: 8px 0;
-            width: 90%;
-            border-radius: 8px;
-            border: none;
-        }
+/* Glass container */
+.container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+}
 
-        button {
-            background: #22c55e;
-            color: white;
-            cursor: pointer;
-        }
+/* Glass cards */
+.card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: 0.3s;
+}
 
-        ul {
-            list-style: none;
-            padding: 0;
-        }
+.card:hover {
+    transform: translateY(-5px);
+}
 
-        li {
-            background: #334155;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 8px;
-        }
+/* Title */
+h1 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
 
-        canvas {
-            margin-top: 20px;
-        }
+/* Inputs */
+.form-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
-        #insight {
-            background: #334155;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-    </style>
+input, select {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+/* Button */
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Expense items */
+li {
+    list-style: none;
+    background: rgba(255,255,255,0.08);
+    margin: 6px 0;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Insight */
+#insight {
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* Glow effect */
+.glow {
+    text-shadow: 0 0 10px #22c55e;
+}
+
+/* Responsive */
+@media(max-width: 768px){
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <h1>💸 Expense Tracker</h1>
+    <h1 class="glow">💸 AI Expense Tracker</h1>
 
-    <input type="text" id="desc" placeholder="Description">
-    <input type="number" id="amount" placeholder="Amount">
+    <!-- Input -->
+    <div class="card">
+        <div class="form-group">
+            <input type="text" id="desc" placeholder="Description">
+            <input type="number" id="amount" placeholder="Amount">
+            <select id="category">
+                <option value="Food">🍔 Food</option>
+                <option value="Travel">🚗 Travel</option>
+                <option value="Shopping">🛍 Shopping</option>
+                <option value="Bills">💡 Bills</option>
+                <option value="Other">📦 Other</option>
+            </select>
+            <button onclick="addExpense()">Add</button>
+        </div>
+    </div>
 
-    <select id="category">
-        <option value="Food">🍔 Food</option>
-        <option value="Travel">🚗 Travel</option>
-        <option value="Shopping">🛍 Shopping</option>
-        <option value="Bills">💡 Bills</option>
-        <option value="Other">📦 Other</option>
-    </select>
+    <div class="grid">
 
-    <button onclick="addExpense()">Add Expense</button>
+        <!-- Expense list -->
+        <div class="card">
+            <h3>💰 Expenses</h3>
+            <ul id="list"></ul>
+            <h3>Total: ₹<span id="total">0</span></h3>
+        </div>
 
-    <h2>Total: ₹<span id="total">0</span></h2>
+        <!-- Chart -->
+        <div class="card">
+            <h3>📊 Analytics</h3>
+            <canvas id="chart"></canvas>
+        </div>
 
-    <ul id="list"></ul>
+    </div>
 
-    <!-- Chart -->
-    <canvas id="chart" width="300" height="300"></canvas>
-
-    <!-- AI Insight -->
-    <h3>🤖 AI Insight:</h3>
-    <p id="insight">No insights yet</p>
+    <!-- AI -->
+    <div class="card">
+        <h3>🤖 AI Insights</h3>
+        <p id="insight">Analyzing your spending...</p>
+    </div>
 </div>
 
 <script>
-    let total = 0;
+let total = 0;
 
-    let categoryData = {
-        Food: 0,
-        Travel: 0,
-        Shopping: 0,
-        Bills: 0,
-        Other: 0
-    };
+let categoryData = {
+    Food: 0,
+    Travel: 0,
+    Shopping: 0,
+    Bills: 0,
+    Other: 0
+};
 
-    let chart;
+let chart;
 
-    function addExpense() {
-        let desc = document.getElementById("desc").value;
-        let amount = parseInt(document.getElementById("amount").value);
-        let category = document.getElementById("category").value;
+async function addExpense() {
+    let desc = document.getElementById("desc").value;
+    let amount = parseInt(document.getElementById("amount").value);
+    let category = document.getElementById("category").value;
 
-        if (!desc || !amount) return;
+    if (!desc || !amount) return;
 
-        total += amount;
-        document.getElementById("total").innerText = total;
+    let expense = { desc, amount, category };
 
-        // update category data
-        categoryData[category] += amount;
+    await fetch("http://localhost:5000/add", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(expense)
+    });
+
+    total += amount;
+    categoryData[category] += amount;
+
+    let li = document.createElement("li");
+    li.innerText = `${category} | ${desc} - ₹${amount}`;
+    document.getElementById("list").appendChild(li);
+
+    document.getElementById("total").innerText = total;
+
+    updateChart();
+    generateInsight();
+
+    document.getElementById("desc").value = "";
+    document.getElementById("amount").value = "";
+}
+
+async function loadExpenses() {
+    let res = await fetch("http://localhost:5000/get");
+    let data = await res.json();
+
+    data.forEach(exp => {
+        total += exp.amount;
+        categoryData[exp.category] += exp.amount;
 
         let li = document.createElement("li");
-        li.innerText = `${category} | ${desc} - ₹${amount}`;
+        li.innerText = `${exp.category} | ${exp.desc} - ₹${exp.amount}`;
         document.getElementById("list").appendChild(li);
+    });
 
-        updateChart();
-        generateInsight();
+    document.getElementById("total").innerText = total;
+    updateChart();
+    generateInsight();
+}
 
-        // clear inputs
-        document.getElementById("desc").value = "";
-        document.getElementById("amount").value = "";
-    }
+function updateChart() {
+    let ctx = document.getElementById("chart").getContext("2d");
 
-    function updateChart() {
-        let ctx = document.getElementById("chart").getContext("2d");
+    if (chart) chart.destroy();
 
-        if (chart) {
-            chart.destroy();
+    chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+                data: Object.values(categoryData),
+                borderWidth: 0
+            }]
         }
+    });
+}
 
-        chart = new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: Object.keys(categoryData),
-                datasets: [{
-                    data: Object.values(categoryData)
-                }]
-            }
-        });
-    }
+async function generateInsight() {
+    let res = await fetch("http://localhost:5000/ai", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(categoryData)
+    });
 
-    function generateInsight() {
-        let maxCategory = "";
-        let maxAmount = 0;
+    let data = await res.json();
+    document.getElementById("insight").innerText = data.insight;
+}
 
-        for (let category in categoryData) {
-            if (categoryData[category] > maxAmount) {
-                maxAmount = categoryData[category];
-                maxCategory = category;
-            }
-        }
-
-        let message = "Your spending looks balanced 👍";
-
-        if (maxAmount > 0) {
-            message = `You are spending the most on ${maxCategory}`;
-        }
-
-        // Smart rule
-        if (categoryData["Food"] > total * 0.4) {
-            message = "⚠️ You are overspending on Food!";
-        }
-
-        document.getElementById("insight").innerText = message;
-    }
+window.onload = loadExpenses;
 </script>
 
 </body>
