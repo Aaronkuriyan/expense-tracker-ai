@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Expense Tracker</title>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial;
@@ -70,12 +70,22 @@
     <button onclick="addExpense()">Add Expense</button>
 
     <h2>Total: ₹<span id="total">0</span></h2>
-
+    <canvas id="chart" width="300" height="300"></canvas>
     <ul id="list"></ul>
 </div>
 
 <script>
     let total = 0;
+
+    let categoryData = {
+        Food: 0,
+        Travel: 0,
+        Shopping: 0,
+        Bills: 0,
+        Other: 0
+    };
+
+    let chart;
 
     function addExpense() {
         let desc = document.getElementById("desc").value;
@@ -87,14 +97,35 @@
         total += amount;
         document.getElementById("total").innerText = total;
 
+        // update category data
+        categoryData[category] += amount;
+
         let li = document.createElement("li");
         li.innerText = `${category} | ${desc} - ₹${amount}`;
-
         document.getElementById("list").appendChild(li);
 
-        // clear inputs
+        updateChart();
+
         document.getElementById("desc").value = "";
         document.getElementById("amount").value = "";
+    }
+
+    function updateChart() {
+        let ctx = document.getElementById("chart").getContext("2d");
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData)
+                }]
+            }
+        });
     }
 </script>
 
