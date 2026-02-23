@@ -3,57 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <title>Expense Tracker</title>
+
     <style>
         body {
             font-family: Arial;
-            text-align: center;
             background: #0f172a;
             color: white;
+            display: flex;
+            justify-content: center;
         }
-        input, button {
-            padding: 10px;
-            margin: 5px;
-        }
+
         .container {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
             margin-top: 50px;
+            width: 350px;
+            text-align: center;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 8px 0;
+            width: 90%;
+            border-radius: 8px;
+            border: none;
+        }
+
+        button {
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #334155;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 8px;
         }
     </style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>💸 Expense Tracker</h1>
+<div class="container">
+    <h1>💸 Expense Tracker</h1>
 
-        <input type="text" id="desc" placeholder="Description">
-        <input type="number" id="amount" placeholder="Amount">
+    <input type="text" id="desc" placeholder="Description">
 
-        <br>
+    <input type="number" id="amount" placeholder="Amount">
 
-        <button onclick="addExpense()">Add Expense</button>
+    <select id="category">
+        <option value="Food">🍔 Food</option>
+        <option value="Travel">🚗 Travel</option>
+        <option value="Shopping">🛍 Shopping</option>
+        <option value="Bills">💡 Bills</option>
+        <option value="Other">📦 Other</option>
+    </select>
 
-        <h2>Total: ₹<span id="total">0</span></h2>
+    <button onclick="addExpense()">Add Expense</button>
 
-        <ul id="list"></ul>
-    </div>
+    <h2>Total: ₹<span id="total">0</span></h2>
 
-    <script>
-        let total = 0;
+    <ul id="list"></ul>
+</div>
 
-        function addExpense() {
-            let desc = document.getElementById("desc").value;
-            let amount = parseInt(document.getElementById("amount").value);
+<script>
+    let total = 0;
 
-            if (!desc || !amount) return;
+    function addExpense() {
+        let desc = document.getElementById("desc").value;
+        let amount = parseInt(document.getElementById("amount").value);
+        let category = document.getElementById("category").value;
 
-            total += amount;
-            document.getElementById("total").innerText = total;
+        if (!desc || !amount) return;
 
-            let li = document.createElement("li");
-            li.innerText = desc + " - ₹" + amount;
+        total += amount;
+        document.getElementById("total").innerText = total;
 
-            document.getElementById("list").appendChild(li);
-        }
-    </script>
+        let li = document.createElement("li");
+        li.innerText = `${category} | ${desc} - ₹${amount}`;
+
+        document.getElementById("list").appendChild(li);
+
+        // clear inputs
+        document.getElementById("desc").value = "";
+        document.getElementById("amount").value = "";
+    }
+</script>
 
 </body>
 </html>
