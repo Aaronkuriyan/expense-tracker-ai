@@ -34,19 +34,16 @@ export default function App() {
     categoryData[e.category] += e.amount;
   });
 
-  // 🔥 Add Expense
   const addExpense = async () => {
     if (!desc || !amount) return;
 
-    const newExp = {
-      desc,
-      amount: Number(amount),
-      category,
-    };
+    const newExp = { desc, amount: Number(amount), category };
 
-    await fetch("http://localhost:5000/add", {
+    await fetch("https://expense-tracker-api.onrender.com/add", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(newExp),
     });
 
@@ -57,15 +54,13 @@ export default function App() {
     generateInsight();
   };
 
-  // 🗑 Delete
   const deleteExpense = (index: number) => {
     setExpenses(expenses.filter((_, i) => i !== index));
   };
 
-  // 📥 Load data
   const loadExpenses = async () => {
     setLoading(true);
-    const res = await fetch("http://localhost:5000/get");
+    const res = await fetch("https://expense-tracker-api.onrender.com/get");
     const data = await res.json();
     setExpenses(data);
     setLoading(false);
@@ -75,11 +70,12 @@ export default function App() {
     loadExpenses();
   }, []);
 
-  // 🤖 AI
   const generateInsight = async () => {
-    const res = await fetch("http://localhost:5000/ai", {
+    const res = await fetch("https://expense-tracker-api.onrender.com/ai", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(categoryData),
     });
 
@@ -88,12 +84,12 @@ export default function App() {
   };
 
   return (
-    <div className="relative flex min-h-screen bg-gradient-to-br from-black via-slate-900 to-gray-900 text-white">
+    <div className="relative z-10 flex min-h-screen bg-gradient-to-br from-black via-slate-900 to-gray-900 text-white">
 
       {/* 🌌 PARTICLES BACKGROUND */}
       <Particles
         options={{
-          background: { color: "#000" },
+          background: { color: "transparent" },
           particles: {
             number: { value: 60 },
             size: { value: 2 },
@@ -101,7 +97,14 @@ export default function App() {
             opacity: { value: 0.3 },
           },
         }}
-        className="absolute inset-0 -z-10"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+        }}
       />
 
       {/* SIDEBAR */}
@@ -121,7 +124,7 @@ export default function App() {
       </motion.div>
 
       {/* MAIN */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 relative z-10">
 
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
@@ -137,17 +140,26 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 p-4 rounded-xl mb-6 flex gap-3"
         >
-          <input value={desc} onChange={(e) => setDesc(e.target.value)}
+          <input
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
             placeholder="Description"
-            className="flex-1 bg-transparent border border-white/10 px-3 py-2 rounded"/>
+            className="flex-1 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
+          />
 
-          <input value={amount} onChange={(e) => setAmount(e.target.value)}
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
             type="number"
             placeholder="Amount"
-            className="w-32 bg-transparent border border-white/10 px-3 py-2 rounded"/>
+            className="w-32 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
+          />
 
-          <select value={category} onChange={(e) => setCategory(e.target.value)}
-            className="bg-transparent border border-white/10 px-3 py-2 rounded">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="bg-transparent border border-white/10 px-3 py-2 rounded text-white"
+          >
             <option>Food</option>
             <option>Travel</option>
             <option>Shopping</option>
@@ -218,12 +230,13 @@ export default function App() {
             animate={{ opacity: 1, x: 0 }}
             className="bg-white/5 p-4 rounded-xl"
           >
-            <Pie data={{
-              labels: Object.keys(categoryData),
-              datasets: [{ data: Object.values(categoryData) }]
-            }} />
+            <Pie
+              data={{
+                labels: Object.keys(categoryData),
+                datasets: [{ data: Object.values(categoryData) }],
+              }}
+            />
           </motion.div>
-
         </div>
 
         {/* AI */}
@@ -235,7 +248,6 @@ export default function App() {
           <h2 className="font-semibold mb-2">🤖 AI Insight</h2>
           <p>{insight}</p>
         </motion.div>
-
       </div>
     </div>
   );
