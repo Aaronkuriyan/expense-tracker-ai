@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Pie } from "react-chartjs-2";
-import Particles from "react-tsparticles";
 import "chart.js/auto";
+
+const API = "https://expense-tracker-api.onrender.com";
 
 export default function App() {
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -13,14 +14,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const categoryColors: any = {
-    Food: "bg-green-500",
-    Travel: "bg-blue-500",
-    Shopping: "bg-pink-500",
-    Bills: "bg-yellow-500",
-    Other: "bg-gray-500",
-  };
 
   const categoryData: any = {
     Food: 0,
@@ -34,220 +27,179 @@ export default function App() {
     categoryData[e.category] += e.amount;
   });
 
-  const addExpense = async () => {
-    if (!desc || !amount) return;
-
-    const newExp = { desc, amount: Number(amount), category };
-
-    await fetch("https://expense-tracker-api.onrender.com/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newExp),
-    });
-
-    setExpenses([...expenses, newExp]);
-    setDesc("");
-    setAmount("");
-
-    generateInsight();
-  };
-
-  const deleteExpense = (index: number) => {
-    setExpenses(expenses.filter((_, i) => i !== index));
-  };
-
+  // 📥 Load expenses
   const loadExpenses = async () => {
-    setLoading(true);
-    const res = await fetch("https://expense-tracker-api.onrender.com/get");
-    const data = await res.json();
-    setExpenses(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch(`${API}/get`);
+      const data = await res.json();
+      setExpenses(data);
+    } catch (err) {
+      console.error("Error loading expenses:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadExpenses();
   }, []);
 
-  const generateInsight = async () => {
-    const res = await fetch("https://expense-tracker-api.onrender.com/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(categoryData),
-    });
+  // ➕ Add expense
+  const addExpense = async () => {
+    if (!desc || !amount) return;
 
-    const data = await res.json();
-    setInsight(data.insight);
+    const newExp = {
+      desc,
+      amount: Number(amount),
+      category,
+    };
+
+    try {
+      await fetch(`${API}/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newExp),
+      });
+
+      setDesc("");
+      setAmount("");
+      loadExpenses();
+      generateInsight();
+    } catch (err) {
+      console.error("Error adding expense:", err);
+    }
+  };
+
+  // 🤖 AI Insight
+  const generateInsight = async () => {
+    try {
+      const res = await fetch(`${API}/ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(categoryData),
+      });
+
+      const data = await res.json();
+      setInsight(data.insight);
+    } catch (err) {
+      console.error("AI error:", err);
+    }
+  };
+
+  // 🗑 Delete (frontend only)
+  const deleteExpense = (index: number) => {
+    const updated = expenses.filter((_, i) => i !== index);
+    setExpenses(updated);
   };
 
   return (
-    <div className="relative z-10 flex min-h-screen bg-gradient-to-br from-black via-slate-900 to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-gray-900 text-white p-6">
 
-      {/* 🌌 PARTICLES BACKGROUND */}
-      <Particles
-        options={{
-          background: { color: "transparent" },
-          particles: {
-            number: { value: 60 },
-            size: { value: 2 },
-            move: { enable: true, speed: 0.5 },
-            opacity: { value: 0.3 },
-          },
-        }}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 0,
-        }}
-      />
-
-      {/* SIDEBAR */}
-      <motion.div
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className="w-64 bg-black/40 backdrop-blur-xl p-6 border-r border-white/10"
+      <motion.h1
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-3xl font-bold mb-6 text-center"
       >
-        <h2 className="text-2xl font-bold mb-6">💸 FinTrack</h2>
-        <ul className="space-y-4 text-gray-300">
-          {["Dashboard", "Analytics", "AI Insights"].map((item, i) => (
-            <motion.li key={i} whileHover={{ scale: 1.1, x: 10 }}>
-              {item}
-            </motion.li>
-          ))}
-        </ul>
-      </motion.div>
+        💸 Expense Tracker AI
+      </motion.h1>
 
-      {/* MAIN */}
-      <div className="flex-1 p-6 relative z-10">
+      {/* INPUT */}
+      <div className="bg-white/5 p-4 rounded-xl mb-6 flex gap-3 flex-wrap">
+        <input
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+          placeholder="Description"
+          className="flex-1 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
+        />
 
-        <motion.h1
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold mb-6"
+        <input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          type="number"
+          placeholder="Amount"
+          className="w-32 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="bg-transparent border border-white/10 px-3 py-2 rounded text-white"
         >
-          Dashboard
-        </motion.h1>
+          <option>Food</option>
+          <option>Travel</option>
+          <option>Shopping</option>
+          <option>Bills</option>
+          <option>Other</option>
+        </select>
 
-        {/* INPUT */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 p-4 rounded-xl mb-6 flex gap-3"
+        <button
+          onClick={addExpense}
+          className="bg-green-500 px-4 py-2 rounded hover:scale-105"
         >
-          <input
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder="Description"
-            className="flex-1 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
-          />
+          Add
+        </button>
+      </div>
 
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            type="number"
-            placeholder="Amount"
-            className="w-32 bg-transparent border border-white/10 px-3 py-2 rounded text-white placeholder-gray-400"
-          />
+      {/* GRID */}
+      <div className="grid md:grid-cols-2 gap-6">
 
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="bg-transparent border border-white/10 px-3 py-2 rounded text-white"
-          >
-            <option>Food</option>
-            <option>Travel</option>
-            <option>Shopping</option>
-            <option>Bills</option>
-            <option>Other</option>
-          </select>
+        {/* EXPENSES */}
+        <div className="bg-white/5 p-4 rounded-xl">
+          <h2 className="mb-3 font-semibold">Expenses</h2>
 
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={addExpense}
-            className="bg-green-500 px-4 rounded"
-          >
-            Add
-          </motion.button>
-        </motion.div>
+          {loading ? (
+            <div className="animate-pulse space-y-2">
+              <div className="h-6 bg-white/10 rounded"></div>
+              <div className="h-6 bg-white/10 rounded"></div>
+              <div className="h-6 bg-white/10 rounded"></div>
+            </div>
+          ) : (
+            expenses.map((e, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center bg-white/10 p-2 rounded mb-2"
+              >
+                <div>
+                  <p>{e.category} | {e.desc} - ₹{e.amount}</p>
+                </div>
 
-        {/* GRID */}
-        <div className="grid md:grid-cols-2 gap-6">
-
-          {/* EXPENSES */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white/5 p-4 rounded-xl"
-          >
-            <h2 className="mb-3 font-semibold">Expenses</h2>
-
-            {loading ? (
-              <div className="animate-pulse space-y-2">
-                <div className="h-6 bg-white/10 rounded"></div>
-                <div className="h-6 bg-white/10 rounded"></div>
-                <div className="h-6 bg-white/10 rounded"></div>
-              </div>
-            ) : (
-              expenses.map((e, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.03 }}
-                  className="flex justify-between items-center bg-white/10 p-2 rounded mb-2"
+                <button
+                  onClick={() => deleteExpense(i)}
+                  className="text-red-400"
                 >
-                  <div>
-                    <span className={`px-2 py-1 rounded text-xs ${categoryColors[e.category]}`}>
-                      {e.category}
-                    </span>
-                    <p>{e.desc} - ₹{e.amount}</p>
-                  </div>
+                  ✕
+                </button>
+              </div>
+            ))
+          )}
 
-                  <motion.button
-                    whileHover={{ scale: 1.3 }}
-                    onClick={() => deleteExpense(i)}
-                    className="text-red-400"
-                  >
-                    ✕
-                  </motion.button>
-                </motion.div>
-              ))
-            )}
-
-            <h3 className="mt-4 font-bold">Total: ₹{total}</h3>
-          </motion.div>
-
-          {/* CHART */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white/5 p-4 rounded-xl"
-          >
-            <Pie
-              data={{
-                labels: Object.keys(categoryData),
-                datasets: [{ data: Object.values(categoryData) }],
-              }}
-            />
-          </motion.div>
+          <h3 className="mt-4 font-bold">Total: ₹{total}</h3>
         </div>
 
-        {/* AI */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 bg-white/5 p-4 rounded-xl"
-        >
-          <h2 className="font-semibold mb-2">🤖 AI Insight</h2>
-          <p>{insight}</p>
-        </motion.div>
+        {/* CHART */}
+        <div className="bg-white/5 p-4 rounded-xl">
+          <Pie
+            data={{
+              labels: Object.keys(categoryData),
+              datasets: [
+                {
+                  data: Object.values(categoryData),
+                },
+              ],
+            }}
+          />
+        </div>
+      </div>
+
+      {/* AI */}
+      <div className="mt-6 bg-white/5 p-4 rounded-xl">
+        <h2 className="font-semibold mb-2">🤖 AI Insight</h2>
+        <p>{insight}</p>
       </div>
     </div>
   );
