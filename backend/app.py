@@ -1,69 +1,35 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openai
-import os
-from dotenv import load_dotenv
 
-# Load env
-load_dotenv()
-
-# ✅ CREATE APP FIRST
 app = Flask(__name__)
+CORS(app)
 
-# ✅ CORS
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+# Replace with your actual key
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
-# ✅ Fix headers
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    return response
-
-# ✅ TEST ROUTE
-@app.route("/")
-def home():
-    return "Backend is running"
-
-# API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+# Temporary in-memory storage (Use a database like SQLite for production)
 expenses = []
 
-# ➕ Add
-@app.route("/add", methods=["POST"])
-def add_expense():
+@app.route('/api/categorize', methods=['POST'])
+def categorize():
     data = request.json
-    expenses.append(data)
-    return jsonify({"message": "Expense added"})
+    item_name = data.get('item')
+    
+    # Prompting OpenAI to return a single category
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": f"Categorize this expense into one word (Food, Transport, Bills, Shopping, or Entertainment): {item_name}"}]
+    )
+    category = response.choices[0].message.content.strip()
+    return jsonify({"category": category})
 
-# 📥 Get
-@app.route("/get", methods=["GET"])
-def get_expenses():
+@app.route('/api/expenses', methods=['GET', 'POST'])
+def handle_expenses():
+    if request.method == 'POST':
+        expenses.append(request.json)
+        return jsonify({"status": "success"}), 201
     return jsonify(expenses)
 
-# 🤖 AI
-@app.route("/ai", methods=["POST"])
-def ai_insight():
-    data = request.json
-
-    prompt = f"Analyze this expense data and give short financial advice: {data}"
-
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        return jsonify({
-            "insight": response.choices[0].message.content
-        })
-
-    except Exception as e:
-        return jsonify({"insight": "Error generating insight"})
-
-# 🚀 Run
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
