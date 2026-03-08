@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 
 interface Expense {
   name: string;
@@ -7,88 +8,87 @@ interface Expense {
   date: string;
 }
 
-const App = () => {
+function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
+  const [form, setForm] = useState({ name: '', amount: '', category: 'General' });
 
-  // 1. Auto-Categorize when user finishes typing the name
-  const handleAutoCategorize = async () => {
-    if (!name) return;
-    const res = await fetch('http://localhost:5000/api/categorize', {
+  useEffect(() => {
+    fetch('http://localhost:5000/api/expenses')
+      .then(res => res.json())
+      .then(data => setExpenses(data));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const response = await fetch('http://localhost:5000/api/expenses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item: name }),
+      body: JSON.stringify(form)
     });
-    const data = await res.json();
-    setCategory(data.category);
+    if (response.ok) {
+      // Refresh list
+      window.location.reload();
+    }
   };
 
-  const addExpense = async () => {
-    const newExpense = { name, amount: parseFloat(amount), category, date: new Date().toISOString() };
-    await fetch('http://localhost:5000/api/expenses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newExpense),
-    });
-    setExpenses([...expenses, newExpense]);
-    setName(''); setAmount(''); setCategory('');
-  };
+  // Logic for your specific request:
+  const currentMonth = new Date().getMonth();
+  const monthlyExpenses = expenses.filter(ex => new Date(ex.date).getMonth() === currentMonth);
+  const totalAmount = monthlyExpenses.reduce((sum, ex) => sum + ex.amount, 0);
 
-  // 2. Calculate Monthly Total
-  const currentMonthTotal = expenses.reduce((sum, item) => sum + item.amount, 0);
-
-  // 3. Find Top Category
-  const categoryTotals = expenses.reduce((acc: any, item) => {
-    acc[item.category] = (acc[item.category] || 0) + item.amount;
+  // Finding the highest spending category
+  const categoryMap = monthlyExpenses.reduce((acc: any, ex) => {
+    acc[ex.category] = (acc[ex.category] || 0) + ex.amount;
     return acc;
   }, {});
-  const topCategory = Object.keys(categoryTotals).reduce((a, b) => categoryTotals[a] > categoryTotals[b] ? a : b, 'None');
+  
+  const topCategory = Object.keys(categoryMap).reduce((a, b) => categoryMap[a] > categoryMap[b] ? a : b, "N/A");
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
-      <h1>Expense Tracker AI 🚀</h1>
+    <div className="container">
+      <h1>Expense Tracker AI</h1>
       
-      <div className="input-group">
-        <input placeholder="What did you buy?" value={name} onChange={(e) => setName(e.target.value)} onBlur={handleAutoCategorize} />
-        <input type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">Select Category</option>
+      <form onSubmit={handleSubmit} className="expense-form">
+        <input placeholder="Item Name" onChange={e => setForm({...form, name: e.target.value})} />
+        <input type="number" placeholder="Amount" onChange={e => setForm({...form, amount: e.target.value})} />
+        <select onChange={e => setForm({...form, category: e.target.value})}>
           <option value="Food">Food</option>
-          <option value="Transport">Transport</option>
+          <option value="Travel">Travel</option>
           <option value="Bills">Bills</option>
           <option value="Shopping">Shopping</option>
         </select>
-        <button onClick={addExpense}>Add Entry</button>
-      </div>
+        <button type="submit">Add Entry</button>
+      </form>
 
-      <table border={1} style={{ width: '100%', marginTop: '20px' }}>
+      <table>
         <thead>
           <tr><th>Date</th><th>Item</th><th>Category</th><th>Amount</th></tr>
         </thead>
         <tbody>
-          {expenses.map((exp, i) => (
+          {monthlyExpenses.map((ex, i) => (
             <tr key={i}>
-              <td>{new Date(exp.date).toLocaleDateString()}</td>
-              <td>{exp.name}</td>
-              <td>{exp.category}</td>
-              <td>${exp.amount.toFixed(2)}</td>
+              <td>{ex.date}</td>
+              <td>{ex.name}</td>
+              <td>{ex.category}</td>
+              <td>${ex.amount}</td>
             </tr>
           ))}
-          <tr style={{ fontWeight: 'bold', background: '#f0f0f0' }}>
-            <td colSpan={3}>Monthly Total</td>
-            <td>${currentMonthTotal.toFixed(2)}</td>
-          </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={3}><strong>Total for this Month:</strong></td>
+            <td><strong>${totalAmount.toFixed(2)}</strong></td>
+          </tr>
+        </tfoot>
       </table>
 
-      <div style={{ marginTop: '20px', padding: '15px', background: '#e3f2fd', borderRadius: '8px' }}>
-        <h3>Monthly Insights</h3>
+      <div className="insights-box">
+        <h3>Monthy Summary</h3>
         <p>You spent the most on <strong>{topCategory}</strong> this month.</p>
+        <p><em>Pro Tip: Try reducing your {topCategory} expenses to save more!</em></p>
       </div>
     </div>
   );
-};
+}
 
 export default App;
