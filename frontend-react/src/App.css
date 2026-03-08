@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can still keep your body background here to prevent "white flashes" on load */
+body {
+  background-color: #191919;
+  margin: 0;
+}
