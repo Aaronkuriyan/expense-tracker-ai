@@ -40,27 +40,28 @@ export default function App() {
   const [type,setType] = useState("Food")
   const [notes,setNotes] = useState("")
 
-  const addExpense = () => {
+const addExpense = () => {
 
-    if(!detail || !amount || !date) return
+  if(!detail || !amount) return
 
-    const newExpense:Expense = {
-      id: Date.now(),
-      detail,
-      amount: Number(amount),
-      date,
-      payment,
-      type,
-      notes
-    }
+  const today = new Date().toISOString().split("T")[0]
 
-    setExpenses([...expenses,newExpense])
-
-    setDetail("")
-    setAmount("")
-    setDate("")
-    setNotes("")
+  const newExpense:Expense = {
+    id: Date.now(),
+    detail,
+    amount: Number(amount),
+    date: today,
+    payment,
+    type,
+    notes
   }
+
+  setExpenses([...expenses,newExpense])
+
+  setDetail("")
+  setAmount("")
+  setNotes("")
+}
 
   const deleteRow = (id:number)=>{
     setExpenses(expenses.filter(e=>e.id!==id))
@@ -96,13 +97,6 @@ export default function App() {
           value={amount}
           onChange={(e)=>setAmount(e.target.value)}
           placeholder="Amount"
-          className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
-        />
-
-        <input
-          type="date"
-          value={date}
-          onChange={(e)=>setDate(e.target.value)}
           className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
         />
 
@@ -166,32 +160,97 @@ export default function App() {
 
           <tbody>
 
-            {expenses.map(e => (
+{expenses.map(e => (
 
-              <tr
-                key={e.id}
-                className="border-t border-gray-800 hover:bg-[#202020]"
-              >
+<tr
+  key={e.id}
+  className="border-t border-gray-800 hover:bg-[#202020]"
+>
 
-                <td className="p-3">{e.detail}</td>
-                <td className="p-3">₹{e.amount}</td>
-                <td className="p-3">{e.date}</td>
-                <td className="p-3">{e.payment}</td>
-                <td className="p-3">{e.type}</td>
-                <td className="p-3">{e.notes}</td>
+<td className="p-3">
+<input
+value={e.detail}
+onChange={(ev)=>{
+setExpenses(expenses.map(x =>
+x.id===e.id ? {...x, detail:ev.target.value} : x
+))
+}}
+className="bg-transparent"
+/>
+</td>
 
-                <td className="p-3">
-                  <button
-                    onClick={()=>deleteRow(e.id)}
-                    className="text-red-400"
-                  >
-                    Delete
-                  </button>
-                </td>
+<td className="p-3">
+<input
+type="number"
+value={e.amount}
+onChange={(ev)=>{
+setExpenses(expenses.map(x =>
+x.id===e.id ? {...x, amount:Number(ev.target.value)} : x
+))
+}}
+className="bg-transparent w-20"
+/>
+</td>
 
-              </tr>
+<td className="p-3">{e.date}</td>
 
-            ))}
+<td className="p-3">
+<select
+value={e.payment}
+onChange={(ev)=>{
+setExpenses(expenses.map(x =>
+x.id===e.id ? {...x, payment:ev.target.value} : x
+))
+}}
+className="bg-transparent"
+>
+<option>Cash</option>
+<option>UPI</option>
+<option>Card</option>
+</select>
+</td>
+
+<td className="p-3">
+<select
+value={e.type}
+onChange={(ev)=>{
+setExpenses(expenses.map(x =>
+x.id===e.id ? {...x, type:ev.target.value} : x
+))
+}}
+className="bg-transparent"
+>
+<option>Food</option>
+<option>Transport</option>
+<option>Shopping</option>
+<option>Other</option>
+</select>
+</td>
+
+<td className="p-3">
+<input
+value={e.notes}
+onChange={(ev)=>{
+setExpenses(expenses.map(x =>
+x.id===e.id ? {...x, notes:ev.target.value} : x
+))
+}}
+className="bg-transparent"
+/>
+</td>
+
+<td className="p-3">
+<button
+onClick={()=>deleteRow(e.id)}
+className="text-red-400"
+>
+Delete
+</button>
+</td>
+
+</tr>
+
+))}
 
           </tbody>
 
