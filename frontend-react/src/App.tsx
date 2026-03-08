@@ -1,189 +1,259 @@
 import { useState } from "react"
+import { Pie } from "react-chartjs-2"
+import "chart.js/auto"
 
 type Expense = {
-  id: number
-  detail: string
-  amount: number
-  date: string
-  category: string
+  id:number
+  detail:string
+  amount:number
+  date:string
+  category:string
 }
 
-export default function App() {
+export default function App(){
 
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id:1, detail:"Auto", amount:120, date:"2026-03-01", category:"Transport" },
-    { id:2, detail:"Puff + samosa", amount:40, date:"2026-03-02", category:"Food" },
-    { id:3, detail:"Juice", amount:39, date:"2026-03-02", category:"Food" },
-    { id:4, detail:"Snacks", amount:390, date:"2026-03-04", category:"Food" },
-    { id:5, detail:"Diet coke", amount:37, date:"2026-03-07", category:"Food" },
-    { id:6, detail:"Bus", amount:50, date:"2026-03-07", category:"Transport" }
-  ])
+const [expenses,setExpenses] = useState<Expense[]>([
+{id:1,detail:"Auto",amount:120,date:"2026-03-01",category:"Transport"},
+{id:2,detail:"Puff + samosa",amount:40,date:"2026-03-02",category:"Food"},
+{id:3,detail:"Juice",amount:39,date:"2026-03-02",category:"Food"},
+{id:4,detail:"Snacks",amount:390,date:"2026-03-04",category:"Food"},
+])
 
-  const [detail,setDetail] = useState("")
-  const [amount,setAmount] = useState("")
-  const [date,setDate] = useState("")
-  const [category,setCategory] = useState("Food")
+const [detail,setDetail] = useState("")
+const [amount,setAmount] = useState("")
+const [date,setDate] = useState("")
+const [category,setCategory] = useState("Food")
 
-  const addExpense = () => {
+const budget = 5000
 
-    if(!detail || !amount || !date) return
+const addExpense = () =>{
 
-    const newExpense: Expense = {
-      id: Date.now(),
-      detail,
-      amount: Number(amount),
-      date,
-      category
-    }
+if(!detail || !amount || !date) return
 
-    setExpenses([...expenses,newExpense])
+const newExpense:Expense = {
+id:Date.now(),
+detail,
+amount:Number(amount),
+date,
+category
+}
 
-    setDetail("")
-    setAmount("")
-    setDate("")
-  }
+setExpenses([...expenses,newExpense])
 
-  const deleteRow = (id:number) => {
-    setExpenses(expenses.filter(e => e.id !== id))
-  }
+setDetail("")
+setAmount("")
+setDate("")
+}
 
-  const total = expenses.reduce((sum,e)=> sum + e.amount,0)
+const deleteRow = (id:number)=>{
+setExpenses(expenses.filter(e=>e.id!==id))
+}
 
-  const tagColor = (cat:string) => {
+const total = expenses.reduce((sum,e)=>sum+e.amount,0)
 
-    if(cat==="Food") return "bg-green-600"
-    if(cat==="Transport") return "bg-blue-600"
-    if(cat==="Shopping") return "bg-purple-600"
+const categoryTotals:any = {
+Food:0,
+Transport:0,
+Shopping:0,
+Other:0
+}
 
-    return "bg-gray-600"
-  }
+expenses.forEach(e=>{
+categoryTotals[e.category]+=e.amount
+})
 
-  return (
+const progress = (total/budget)*100
 
-    <div className="min-h-screen bg-[#111] text-white p-10">
+const tagColor=(cat:string)=>{
 
-      {/* Title */}
+if(cat==="Food") return "bg-green-600"
+if(cat==="Transport") return "bg-blue-600"
+if(cat==="Shopping") return "bg-purple-600"
 
-      <h1 className="text-4xl font-bold mb-4">
-        Daily Expense Tracker
-      </h1>
+return "bg-gray-600"
+}
 
-      <p className="text-gray-400 mb-8">
-        Maintain below ₹5000 🪙
-      </p>
+return(
 
-      {/* Input row */}
+<div className="min-h-screen bg-[#111] text-white p-10">
 
-      <div className="flex gap-3 mb-6 flex-wrap">
+<h1 className="text-4xl font-bold mb-4">
+Daily Expense Tracker
+</h1>
 
-        <input
-          value={detail}
-          onChange={(e)=>setDetail(e.target.value)}
-          placeholder="Detail"
-          className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
-        />
+<p className="text-gray-400 mb-6">
+Maintain below ₹5000 🪙
+</p>
 
-        <input
-          type="number"
-          value={amount}
-          onChange={(e)=>setAmount(e.target.value)}
-          placeholder="Amount"
-          className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
-        />
+{/* Budget Bar */}
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e)=>setDate(e.target.value)}
-          className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
-        />
+<div className="mb-10">
 
-        <select
-          value={category}
-          onChange={(e)=>setCategory(e.target.value)}
-          className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
-        >
-          <option>Food</option>
-          <option>Transport</option>
-          <option>Shopping</option>
-          <option>Other</option>
-        </select>
+<div className="flex justify-between mb-1">
+<span>Budget Usage</span>
+<span>₹{total} / ₹{budget}</span>
+</div>
 
-        <button
-          onClick={addExpense}
-          className="bg-blue-600 px-4 rounded hover:bg-blue-700"
-        >
-          Add
-        </button>
+<div className="w-full bg-gray-800 rounded h-3">
+<div
+style={{width:`${progress}%`}}
+className="bg-green-500 h-3 rounded"
+/>
+</div>
 
-      </div>
+</div>
 
-      {/* Table */}
+{/* Input */}
 
-      <div className="bg-[#181818] border border-gray-700 rounded-xl overflow-hidden">
+<div className="flex gap-3 mb-8 flex-wrap">
 
-        <table className="w-full">
+<input
+value={detail}
+onChange={(e)=>setDetail(e.target.value)}
+placeholder="Detail"
+className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
+/>
 
-          <thead className="bg-[#1f1f1f] text-gray-400">
+<input
+type="number"
+value={amount}
+onChange={(e)=>setAmount(e.target.value)}
+placeholder="Amount"
+className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
+/>
 
-            <tr>
-              <th className="text-left p-3">Detail</th>
-              <th className="text-left p-3">Amount</th>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Category</th>
-              <th className="text-left p-3"></th>
-            </tr>
+<input
+type="date"
+value={date}
+onChange={(e)=>setDate(e.target.value)}
+className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
+/>
 
-          </thead>
+<select
+value={category}
+onChange={(e)=>setCategory(e.target.value)}
+className="bg-[#1b1b1b] border border-gray-700 p-2 rounded"
+>
+<option>Food</option>
+<option>Transport</option>
+<option>Shopping</option>
+<option>Other</option>
+</select>
 
-          <tbody>
+<button
+onClick={addExpense}
+className="bg-blue-600 px-4 rounded hover:bg-blue-700"
+>
+Add
+</button>
 
-            {expenses.map((e)=>(
-              <tr
-                key={e.id}
-                className="border-t border-gray-800 hover:bg-[#202020]"
-              >
+</div>
 
-                <td className="p-3">{e.detail}</td>
+{/* Layout */}
 
-                <td className="p-3">₹{e.amount}</td>
+<div className="grid grid-cols-2 gap-10">
 
-                <td className="p-3">{e.date}</td>
+{/* Table */}
 
-                <td className="p-3">
+<div className="bg-[#181818] border border-gray-700 rounded-xl overflow-hidden">
 
-                  <span className={`px-2 py-1 rounded text-xs ${tagColor(e.category)}`}>
-                    {e.category}
-                  </span>
+<table className="w-full">
 
-                </td>
+<thead className="bg-[#1f1f1f] text-gray-400">
 
-                <td className="p-3">
+<tr>
+<th className="text-left p-3">Detail</th>
+<th className="text-left p-3">Amount</th>
+<th className="text-left p-3">Date</th>
+<th className="text-left p-3">Category</th>
+<th className="text-left p-3"></th>
+</tr>
 
-                  <button
-                    onClick={()=>deleteRow(e.id)}
-                    className="text-red-400 hover:text-red-500"
-                  >
-                    Delete
-                  </button>
+</thead>
 
-                </td>
+<tbody>
 
-              </tr>
-            ))}
+{expenses.map(e=>(
 
-          </tbody>
+<tr
+key={e.id}
+className="border-t border-gray-800 hover:bg-[#202020]"
+>
 
-        </table>
+<td className="p-3">{e.detail}</td>
 
-      </div>
+<td className="p-3">₹{e.amount}</td>
 
-      <div className="mt-4 text-gray-400">
-        SUM ₹{total}
-      </div>
+<td className="p-3">{e.date}</td>
 
-    </div>
+<td className="p-3">
+<span className={`px-2 py-1 rounded text-xs ${tagColor(e.category)}`}>
+{e.category}
+</span>
+</td>
 
-  )
+<td className="p-3">
+<button
+onClick={()=>deleteRow(e.id)}
+className="text-red-400 hover:text-red-500"
+>
+Delete
+</button>
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+<div className="p-3 text-gray-400">
+SUM ₹{total}
+</div>
+
+</div>
+
+{/* Chart */}
+
+<div className="bg-[#181818] border border-gray-700 rounded-xl p-6">
+
+<h2 className="text-xl mb-4">
+Expense Analytics
+</h2>
+
+<Pie
+data={{
+labels:Object.keys(categoryTotals),
+datasets:[
+{
+data:Object.values(categoryTotals)
+}
+]
+}}
+/>
+
+</div>
+
+</div>
+
+{/* AI Insight */}
+
+<div className="mt-10 bg-[#181818] border border-gray-700 rounded-xl p-6">
+
+<h2 className="text-xl mb-3">
+AI Financial Insight
+</h2>
+
+<p className="text-gray-400">
+You are spending most on food. Consider setting a weekly food budget to maintain financial balance.
+</p>
+
+</div>
+
+</div>
+
+)
 
 }
