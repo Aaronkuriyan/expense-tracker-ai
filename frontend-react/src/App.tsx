@@ -35,7 +35,6 @@ export default function App() {
 
   const [detail,setDetail] = useState("")
   const [amount,setAmount] = useState("")
-  const [date,setDate] = useState("")
   const [payment,setPayment] = useState("Cash")
   const [type,setType] = useState("Food")
   const [notes,setNotes] = useState("")
